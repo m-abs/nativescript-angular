@@ -11,7 +11,8 @@ import { Frame } from "tns-core-modules/ui/frame";
 import { NSRouterLink } from "./ns-router-link";
 import { NSRouterLinkActive } from "./ns-router-link-active";
 import { PageRouterOutlet } from "./page-router-outlet";
-import { NSLocationStrategy, LocationState } from "./ns-location-strategy";
+import { NSLocationStrategy, LocationState,
+    CustomPageTransition, customPageTransitionsToken } from "./ns-location-strategy";
 import { NativescriptPlatformLocation } from "./ns-platform-location";
 import { NSRouteReuseStrategy } from "./ns-route-reuse-strategy";
 import { RouterExtensions } from "./router-extensions";
@@ -32,7 +33,11 @@ export type LocationState = LocationState;
         {
             provide: NSLocationStrategy,
             useFactory: provideLocationStrategy,
-            deps: [[NSLocationStrategy, new Optional(), new SkipSelf()], Frame]
+            deps: [
+                [NSLocationStrategy, new Optional(), new SkipSelf()],
+                Frame,
+                [customPageTransitionsToken, new Optional()],
+            ]
         },
         { provide: LocationStrategy, useExisting: NSLocationStrategy },
         NativescriptPlatformLocation,
@@ -63,6 +68,9 @@ export class NativeScriptRouterModule {
     }
 }
 
-export function provideLocationStrategy(locationStrategy: NSLocationStrategy, frame: Frame): NSLocationStrategy {
-    return locationStrategy ? locationStrategy : new NSLocationStrategy(frame);
+export function provideLocationStrategy(
+    locationStrategy: NSLocationStrategy,
+    frame: Frame,
+    customTransitions: CustomPageTransition[]): NSLocationStrategy {
+    return locationStrategy ? locationStrategy : new NSLocationStrategy(frame, customTransitions);
 }

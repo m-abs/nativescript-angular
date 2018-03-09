@@ -1,8 +1,18 @@
-import { Injectable } from "@angular/core";
+import { Injectable, InjectionToken, Optional, Inject } from "@angular/core";
 import { LocationStrategy } from "@angular/common";
 import { routerLog } from "../trace";
 import { Frame, NavigationTransition } from "tns-core-modules/ui/frame";
 import { isPresent } from "../lang-facade";
+import { Transition } from "tns-core-modules/ui/transition";
+
+export type TransitionInitializer = new (duration: number, curve: any) => Transition;
+
+export interface CustomPageTransition {
+    name: string;
+    initializer: TransitionInitializer;
+}
+
+export const customPageTransitionsToken = new InjectionToken<CustomPageTransition[]>("CustomPageTransitions");
 
 export interface NavigationOptions {
     clearHistory?: boolean;
@@ -31,9 +41,25 @@ export class NSLocationStrategy extends LocationStrategy {
     private _isPageNavigationBack = false;
     private _currentNavigationOptions: NavigationOptions;
 
-    constructor(private frame: Frame) {
+    private customTransitionMap = new Map<string, TransitionInitializer>();
+
+    constructor(
+        private frame: Frame,
+        @Optional() @Inject(customPageTransitionsToken) customTransitions?: CustomPageTransition[]
+    ) {
         super();
         routerLog("NSLocationStrategy.constructor()");
+
+        if (customTransitions) {
+            if (!Array.isArray(customTransitions)) {
+                const {name, initializer} = customTransitions as CustomPageTransition;
+                this.registerCustomTransition(name, initializer);
+            } else {
+                for (const {name, initializer} of customTransitions) {
+                    this.registerCustomTransition(name, initializer);
+                }
+            }
+        }
     }
 
     path(): string {
@@ -130,6 +156,10 @@ export class NSLocationStrategy extends LocationStrategy {
         return "";
     }
 
+    registerCustomTransition(name: string, initializer: TransitionInitializer) {
+        this.customTransitionMap.set(name, initializer);
+    }
+
     private callPopState(state: LocationState, pop: boolean = true) {
         const change = { url: state.url, pop: pop };
         for (let fn of this.popStateCallbacks) {
@@ -183,6 +213,20 @@ export class NSLocationStrategy extends LocationStrategy {
         if (navOptions.clearHistory) {
             routerLog("NSLocationStrategy._beginPageNavigation clearing states history");
             this.states = [lastState];
+        }
+
+        if (navOptions.transition && navOptions.transition.name) {
+            const name = navOptions.transition.name;
+            if (this.customTransitionMap.has(name)) {
+                routerLog("NSLocationStrategy._beginPageNavigation using named custom transition");
+                const { duration, curve } = navOptions.transition;
+                const initializer = this.customTransitionMap.get(name);
+                navOptions.transition = {
+                    duration,
+                    curve,
+                    instance: new initializer(duration, curve),
+                };
+            }
         }
 
         this._currentNavigationOptions = undefined;

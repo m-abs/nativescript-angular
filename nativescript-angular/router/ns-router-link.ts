@@ -55,7 +55,6 @@ export class NSRouterLink implements OnChanges { // tslint:disable-line:directiv
         private navigator: RouterExtensions,
         private route: ActivatedRoute,
         @Optional() private pageRoute: PageRoute) {
-
         this.usePageRoute = (this.pageRoute && this.route === this.pageRoute.activatedRoute.getValue());
     }
 
