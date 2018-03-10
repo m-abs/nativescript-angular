@@ -4,19 +4,45 @@ import { Location } from "@angular/common";
 import { Page } from "ui/page";
 import { Observable } from "rxjs/Observable";
 import "rxjs/add/operator/map";
-
+import { customPageTransitionsToken } from "nativescript-angular/router//ns-location-strategy";
+import {
+    SlideUpAndOverTransition,
+    SlideRightAndOverTransition,
+    SlideDownAndOverTransition,
+    SlideLeftAndOverTransition
+} from "./transitions/slide-over";
 
 @Component({
     selector: "first",
     styleUrls: ["examples/router/styles.css"],
     template: `
     <StackLayout>
-        <Label text="First component" class="title"></Label>
+        <Label text="First component 2" class="title"></Label>
         <Button text="Second(1)" [nsRouterLink]="['/second', '1' ]"></Button>
+        <Button
+            text="Second(1) - custom slide up"
+            [nsRouterLink]="['/second', '1' ]"
+            pageTransition="custom-slide-up"
+        ></Button>
         <Button text="Second(2)" [nsRouterLink]="['/second', '2' ]"></Button>
+        <Button
+            text="Second(2) - custom slide right"
+            [nsRouterLink]="['/second', '2' ]"
+            pageTransition="custom-slide-right"
+        ></Button>
 
         <Button text="Third(1)" [nsRouterLink]="['/third', '1' ]"></Button>
+        <Button
+            text="Third(1) - custom slide down"
+            [nsRouterLink]="['/third', 'a' ]"
+            pageTransition="custom-slide-down"
+        ></Button>
         <Button text="Third(2)" [nsRouterLink]="['/third', '2' ]"></Button>
+        <Button
+            text="Third(2) - custom slide left"
+            [nsRouterLink]="['/third', '2' ]"
+            pageTransition="custom-slide-left"
+        ></Button>
     </StackLayout>`
 })
 class FirstComponent implements OnInit, OnDestroy {
@@ -116,6 +142,41 @@ export class PageRouterOutletAppComponent {
         FirstComponent,
         SecondComponent,
         ThirdComponent
+    ];
+
+    static providers = [
+        {
+            provide: customPageTransitionsToken,
+            useValue: {
+                name: "custom-slide-right",
+                initializer: SlideRightAndOverTransition
+            },
+            multi: true,
+        },
+        {
+            provide: customPageTransitionsToken,
+            useValue: {
+                name: "custom-slide-up",
+                initializer: SlideUpAndOverTransition
+            },
+            multi: true,
+        },
+        {
+            provide: customPageTransitionsToken,
+            useValue: {
+                name: "custom-slide-down",
+                initializer: SlideDownAndOverTransition
+            },
+            multi: true,
+        },
+        {
+            provide: customPageTransitionsToken,
+            useValue: {
+                name: "custom-slide-left",
+                initializer: SlideLeftAndOverTransition
+            },
+            multi: true,
+        },
     ];
 
     constructor(router: Router, private location: Location) {
