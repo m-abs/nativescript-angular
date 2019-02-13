@@ -100,6 +100,7 @@ export abstract class TemplatedItemsComponent implements DoCheck, OnDestroy, Aft
 
     ngOnDestroy() {
         this.templatedItemsView.off("itemLoading", this.onItemLoading, this);
+        this.templatedItemsView = null;
     }
 
     private setItemTemplates() {

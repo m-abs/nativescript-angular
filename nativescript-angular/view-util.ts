@@ -178,6 +178,10 @@ export class ViewUtil {
             traceLog(`ViewUtil.removeFromQueue parent: ${parent} child: ${child}`);
         }
 
+        while (child && child.firstChild) {
+            this.removeFromQueue(child, child.firstChild);
+        }
+
         if (parent.firstChild === child && parent.lastChild === child) {
             parent.firstChild = null;
             parent.lastChild = null;

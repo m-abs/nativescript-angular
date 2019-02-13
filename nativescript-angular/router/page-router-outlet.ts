@@ -200,6 +200,17 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
         } else {
             log("NSLocationStrategy.ngOnDestroy: no outlet available for page-router-outlet");
         }
+
+        if (this.isActivated) {
+            destroyComponentRef(this.activated);
+            this.activated = null;
+        }
+
+        if (this.frame) {
+            this.viewUtil.removeChild(this.frame.parentNode as any, this.frame);
+        }
+
+        this.location = null;
     }
 
     deactivate(): void {

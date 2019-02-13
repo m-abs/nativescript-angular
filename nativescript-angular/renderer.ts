@@ -129,7 +129,7 @@ export class NativeScriptRenderer extends Renderer2 {
     @profile
     parentNode(node: NgView): any {
         if (isLogEnabled()) {
-            traceLog(`NativeScriptRenderer.parentNode for node: ${node}`);
+            traceLog(`NativeScriptRenderer.parentNode for node: ${node} is ${node.parentNode}`);
         }
         return node.parentNode;
     }

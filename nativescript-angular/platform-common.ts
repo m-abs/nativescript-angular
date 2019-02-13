@@ -262,6 +262,11 @@ export class NativeScriptPlatformRef extends PlatformRef {
                 if (lastModuleRef) {
                     lastModuleRef.destroy();
                 }
+
+                rootContent = null;
+                if (tempAppHostView) {
+                    tempAppHostView.content = null;
+                }
             }
         );
         on(launchEvent, launchCallback);
