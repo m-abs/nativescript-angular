@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, OnDestroy } from "@angular/core";
 import { Router, UrlTree, NavigationExtras, ActivatedRoute } from "@angular/router";
 import { NSLocationStrategy, NavigationOptions, Outlet } from "./ns-location-strategy";
 import { FrameService } from "../platform-providers";
@@ -13,13 +13,17 @@ export interface BackNavigationOptions {
 }
 
 @Injectable()
-export class RouterExtensions {
+export class RouterExtensions implements OnDestroy {
 
     constructor(
         public router: Router,
         public locationStrategy: NSLocationStrategy,
         public frameService: FrameService
     ) { }
+
+    ngOnDestroy(): void {
+        console.log(`RouterExtensions.ngOnDestroy()`);
+    }
 
     public navigate(commands: any[], extras?: ExtendedNavigationExtras): Promise<boolean> {
         if (extras) {

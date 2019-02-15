@@ -13,7 +13,7 @@ import {
 } from "@angular/router";
 
 import { Device } from "tns-core-modules/platform";
-import { Frame } from "tns-core-modules/ui/frame";
+import { Frame, ViewBase } from "tns-core-modules/ui/frame";
 import { Page, NavigatedData } from "tns-core-modules/ui/page";
 import { profile } from "tns-core-modules/profiling";
 
@@ -187,7 +187,7 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
         }
     }
 
-    ngOnDestroy(): void {
+    ngOnDestroy() {
         // Clear accumulated modal view page cache when page-router-outlet
         // destroyed on modal view closing
         this.parentContexts.onChildOutletDestroyed(this.name);
@@ -201,16 +201,26 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
             log("NSLocationStrategy.ngOnDestroy: no outlet available for page-router-outlet");
         }
 
+        this.deactivate();
+
+        console.log("this.activated.hostView", this.activated && this.activated.hostView);
+
         if (this.isActivated) {
+            const c = this.activated.instance;
+            this.activated.hostView.detach();
             destroyComponentRef(this.activated);
-            this.activated = null;
+
+            this.deactivateEvents.emit(c);
         }
 
-        if (this.frame) {
-            this.viewUtil.removeChild(this.frame.parentNode as any, this.frame);
-        }
-
+        this.activated = null;
+        this.parentContexts = null;
+        this.outlet = null;
         this.location = null;
+        this.frame["_executingEntry"] = null;
+        this.frame = null;
+        this.changeDetector = null;
+        this._activatedRoute = null;
     }
 
     deactivate(): void {
@@ -363,7 +373,7 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
         // Add it to the new page
         page.content = componentView;
 
-        const navigatedFromCallback = (<any>global).Zone.current.wrap((args: NavigatedData) => {
+        let navigatedFromCallback = (<any>global).Zone.current.wrap((args: NavigatedData) => {
             if (args.isBackNavigation) {
                 this.locationStrategy._beginBackPageNavigation(this.frame);
                 this.locationStrategy.back(null, this.frame);
@@ -371,10 +381,13 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
         });
         page.on(Page.navigatedFromEvent, navigatedFromCallback);
         componentRef.onDestroy(() => {
-            if (page) {
-                page.off(Page.navigatedFromEvent, navigatedFromCallback);
-                page = null;
+            if (!page || !navigatedFromCallback) {
+                return;
             }
+
+            page.off(Page.navigatedFromEvent, navigatedFromCallback);
+            navigatedFromCallback = null;
+            page = null;
         });
 
         const navOptions = this.locationStrategy._beginPageNavigation(this.frame);

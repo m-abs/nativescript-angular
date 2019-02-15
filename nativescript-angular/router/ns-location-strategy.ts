@@ -733,6 +733,8 @@ export class NSLocationStrategy extends LocationStrategy {
     ngOnDestroy() {
         console.log("NSLocationStrategy.ngOnDestroy()");
         this.outlets = [];
+        this.popStateCallbacks = null;
+        this.currentOutlet = null;
         this.frameService = null;
     }
 }

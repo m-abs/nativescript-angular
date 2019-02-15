@@ -73,6 +73,11 @@ export class NativeScriptRendererFactory implements RendererFactory2 {
         this.componentRenderers.set(type.id, renderer);
         return renderer;
     }
+
+    ngOnDestroy(): void {
+        console.log(`NativeScriptRendererFactory.ngOnDestroy() ${this.rootNgView} ${this.rootNgView && this.rootNgView.firstChild}`);
+        this.viewUtil.removeChild(this.rootNgView, this.rootNgView.firstChild);
+    }
 }
 
 export class NativeScriptRenderer extends Renderer2 {

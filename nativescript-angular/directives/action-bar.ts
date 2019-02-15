@@ -90,7 +90,7 @@ registerElement("NavigationButton", () => require("tns-core-modules/ui/action-ba
     selector: "ActionBar",
     template: "<ng-content></ng-content>"
 })
-export class ActionBarComponent {
+export class ActionBarComponent implements OnDestroy {
     constructor(public element: ElementRef, private page: Page) {
         if (!this.page) {
             throw new Error("Inside ActionBarComponent but no Page found in DI.");
@@ -102,17 +102,25 @@ export class ActionBarComponent {
         this.page.actionBar = this.element.nativeElement;
         this.page.actionBar.update();
     }
+
+    ngOnDestroy(): void {
+        this.page = null;
+    }
 }
 
 @Component({
     selector: "ActionBarExtension",
     template: ""
 })
-export class ActionBarScope { // tslint:disable-line:component-class-suffix
+export class ActionBarScope implements OnDestroy { // tslint:disable-line:component-class-suffix
     constructor(private page: Page) {
         if (!this.page) {
             throw new Error("Inside ActionBarScope but no Page found in DI.");
         }
+    }
+    
+    ngOnDestroy(): void {
+        this.page = null;
     }
 
     public onNavButtonInit(navBtn: NavigationButtonDirective) {

@@ -135,7 +135,7 @@ export class ViewUtil {
         child: NgView,
         next: NgView
     ): void {
-        if (child.parent === parent) {
+        if (child.parentNode === parent) {
             this.removeLayoutChild(parent, child);
         }
 
@@ -169,8 +169,8 @@ export class ViewUtil {
         const extendedParent = this.ensureNgViewExtensions(parent);
         const extendedChild = this.ensureNgViewExtensions(child);
 
-        this.removeFromQueue(extendedParent, extendedChild);
         this.removeFromVisualTree(extendedParent, extendedChild);
+        this.removeFromQueue(extendedParent, extendedChild);
     }
 
     private removeFromQueue(parent: NgView, child: NgView) {
@@ -179,7 +179,8 @@ export class ViewUtil {
         }
 
         while (child && child.firstChild) {
-            this.removeFromQueue(child, child.firstChild);
+            traceLog(`ViewUtil.removeFromQueue parent: ${parent} child: ${child} grandchild: ${child.firstChild}`);
+            this.removeChild(child, child.firstChild);
         }
 
         if (parent.firstChild === child && parent.lastChild === child) {
@@ -277,12 +278,17 @@ export class ViewUtil {
     }
 
     public createView(name: string): NgView {
+        const originalName = name;
         if (isLogEnabled()) {
-            traceLog(`Creating view: ${name}`);
+            traceLog(`Creating view: ${originalName}`);
         }
 
         if (!isKnownView(name)) {
             name = "ProxyViewContainer";
+        }
+
+        if (isLogEnabled()) {
+            traceLog(`Creating view: ${originalName} ${name}`);
         }
 
         const viewClass = getViewClass(name);
@@ -304,6 +310,10 @@ export class ViewUtil {
     }
 
     private setNgViewExtensions(view: View, name: string): NgView {
+        if (isLogEnabled()) {
+            traceLog(`setNgViewExtensions: ${view} "${name}"`);
+        }
+
         const ngView = view as NgView;
         ngView.nodeName = name;
         ngView.meta = getViewMeta(name);
@@ -313,7 +323,36 @@ export class ViewUtil {
         // dom animation engine
         ngView.nodeType = ELEMENT_NODE_TYPE;
 
+        /*
+        for (const propName of ["nextSibling", "parent", "firstChild", "lastChild"]) {
+            this.definedSiblingProperty(ngView, propName);
+        }
+        */
+
         return ngView;
+    }
+
+    private definedSiblingProperty(ngView: NgView, propName: string) {
+        let viewWeakRef: WeakRef<NgView>;
+
+        if (propName in ngView) {
+            console.log(`definedSiblingProperty: ${ngView}.${propName} already exists ${ngView[propName]}`);
+        }
+
+        Object.defineProperty(ngView, propName, {
+            get(this: NgView) {
+                return viewWeakRef && viewWeakRef.get();
+            },
+            set(this: NgView, viewRef: NgView) {
+                console.log(`definedSiblingProperty: ${this}.${propName} = ${viewRef} was ${this[propName]}`);
+                if (viewRef && typeof viewRef === "object") {
+                    viewWeakRef = new WeakRef(viewRef);
+                } else {
+                    viewWeakRef = null;
+                }
+            },
+            configurable: true,
+        });
     }
 
     public setProperty(view: NgView, attributeName: string, value: any, namespace?: string): void {
