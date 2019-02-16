@@ -169,8 +169,8 @@ export class ViewUtil {
         const extendedParent = this.ensureNgViewExtensions(parent);
         const extendedChild = this.ensureNgViewExtensions(child);
 
-        this.removeFromVisualTree(extendedParent, extendedChild);
         this.removeFromQueue(extendedParent, extendedChild);
+        this.removeFromVisualTree(extendedParent, extendedChild);
     }
 
     private removeFromQueue(parent: NgView, child: NgView) {
@@ -184,8 +184,8 @@ export class ViewUtil {
         }
 
         if (parent.firstChild === child && parent.lastChild === child) {
-            parent.firstChild = null;
-            parent.lastChild = null;
+            delete parent.firstChild;
+            delete parent.lastChild;
             return;
         }
 
@@ -201,6 +201,8 @@ export class ViewUtil {
         if (previous) {
             previous.nextSibling = child.nextSibling;
         }
+
+        delete child.nextSibling;
     }
 
     // NOTE: This one is O(n) - use carefully
@@ -323,36 +325,7 @@ export class ViewUtil {
         // dom animation engine
         ngView.nodeType = ELEMENT_NODE_TYPE;
 
-        /*
-        for (const propName of ["nextSibling", "parent", "firstChild", "lastChild"]) {
-            this.definedSiblingProperty(ngView, propName);
-        }
-        */
-
         return ngView;
-    }
-
-    private definedSiblingProperty(ngView: NgView, propName: string) {
-        let viewWeakRef: WeakRef<NgView>;
-
-        if (propName in ngView) {
-            console.log(`definedSiblingProperty: ${ngView}.${propName} already exists ${ngView[propName]}`);
-        }
-
-        Object.defineProperty(ngView, propName, {
-            get(this: NgView) {
-                return viewWeakRef && viewWeakRef.get();
-            },
-            set(this: NgView, viewRef: NgView) {
-                console.log(`definedSiblingProperty: ${this}.${propName} = ${viewRef} was ${this[propName]}`);
-                if (viewRef && typeof viewRef === "object") {
-                    viewWeakRef = new WeakRef(viewRef);
-                } else {
-                    viewWeakRef = null;
-                }
-            },
-            configurable: true,
-        });
     }
 
     public setProperty(view: NgView, attributeName: string, value: any, namespace?: string): void {

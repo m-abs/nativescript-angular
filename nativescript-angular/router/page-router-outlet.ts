@@ -201,10 +201,6 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
             log("NSLocationStrategy.ngOnDestroy: no outlet available for page-router-outlet");
         }
 
-        this.deactivate();
-
-        console.log("this.activated.hostView", this.activated && this.activated.hostView);
-
         if (this.isActivated) {
             const c = this.activated.instance;
             this.activated.hostView.detach();
@@ -401,7 +397,7 @@ export class PageRouterOutlet implements OnDestroy { // tslint:disable-line:dire
                 page.off(Page.navigatedToEvent, clearCallback);
             });
 
-            page.on(Page.navigatedToEvent, clearCallback);
+            page.once(Page.navigatedToEvent, clearCallback);
         }
 
         this.frame.navigate({
