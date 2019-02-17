@@ -184,8 +184,8 @@ export class ViewUtil {
         }
 
         if (parent.firstChild === child && parent.lastChild === child) {
-            delete parent.firstChild;
-            delete parent.lastChild;
+            parent.firstChild = null
+            parent.lastChild = null;
             return;
         }
 
@@ -202,7 +202,7 @@ export class ViewUtil {
             previous.nextSibling = child.nextSibling;
         }
 
-        delete child.nextSibling;
+        child.nextSibling = null;
     }
 
     // NOTE: This one is O(n) - use carefully
@@ -256,8 +256,9 @@ export class ViewUtil {
             this.removeLayoutChild(parent, child);
         } else if (isContentView(parent) && parent.content === child) {
             parent.content = null;
-            parent.lastChild = null;
-            parent.firstChild = null;
+        } else if (child.nodeName === "DetachedContainer") {
+            // Skip - DetachedContainer is... well detached from its parent
+            // Used with ListViews and other TemplatedItemsComponent views.
         } else if (isView(parent)) {
             parent._removeView(child);
         }
